@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # PUBLIC ROUTES: No Filter
+        - id: auth-public
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/login, /api/auth/register
+
+        # PRIVATE ROUTES: Needs the Guard
+        - id: tracker-service
+          uri: lb://tracker-service
+          predicates:
+            - Path=/api/projects/**, /api/tasks/**
+          filters:
+            - JwtAuthenticationFilter
+
+        - id: auth-internal-lookups
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/users/**
+          filters:
+            - JwtAuthenticationFilter
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    # REMOVE the ip-address: 127.0.0.1 line if you want other services to see the Gateway
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

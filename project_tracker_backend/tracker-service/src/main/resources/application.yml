@@ -1,0 +1,10 @@
+logging:
+  level:
+    # This prints every Feign request/response in the console
+    org.ptb.trackerservice.client.UserClient: DEBUG
+
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: FULL
