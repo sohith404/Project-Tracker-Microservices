@@ -117,7 +117,20 @@ public class ProjectService {
                 .orElseThrow(() -> new RuntimeException("Project not found: " + projectId));
     }
 
-    public void deleteProject(Integer projectId) {
-        projectRepository.deleteById(projectId);
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteProject(Integer projectId, String email) {
+        ProjectEntity project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found: " + projectId));
+
+        UserDTO currentUser = userClient.getUserByEmail(email);
+
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(currentUser.getRole());
+        boolean isProjectCreator = project.getCreatedByUserId().equals(currentUser.getUserId());
+
+        if (isAdmin || isProjectCreator) {
+            projectRepository.delete(project);
+        } else {
+            throw new RuntimeException("Access Denied: Only the project creator or an admin can delete this project.");
+        }
     }
 }

@@ -134,6 +134,7 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteTask(Integer taskId) {
         TaskEntity task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
@@ -143,9 +144,14 @@ public class TaskService {
 
         // Security check using logical IDs
         boolean isAdmin = "ADMIN".equalsIgnoreCase(currentUser.getRole());
-        boolean isCreator = task.getCreatedByUserId().equals(currentUser.getUserId());
+        boolean isTaskCreator = task.getCreatedByUserId().equals(currentUser.getUserId());
+        boolean isProjectCreator = task.getProject().getCreatedByUserId().equals(currentUser.getUserId());
 
-        if (isAdmin || isCreator) {
+        if (isAdmin || isTaskCreator || isProjectCreator) {
+            // Remove from parent collection to handle Bidirectional EAGER fetch issues
+            if (task.getProject() != null) {
+                task.getProject().getTasks().remove(task);
+            }
             taskRepository.delete(task);
         } else {
             throw new RuntimeException("Access Denied.");
