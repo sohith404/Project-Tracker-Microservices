@@ -58,10 +58,10 @@ public class AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
         UserEntity userDetails = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Error: User not found."));
+
+        String jwt = jwtUtils.generateJwtToken(authentication, userDetails.getRole());
 
         return new AuthResponse(
                 jwt,
